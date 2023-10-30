@@ -1,0 +1,126 @@
+Node only recommendation
+
+Data before manual execution
+
+Node Group Name:  nodepool-01
+Instance Type:  e2-standard-16
+Total Memory Capacity:  768000000000
+Memory of Workloads:  118226483103.11859
+Total CPU Capacity 192.0
+CPU of Workloads:  64.49395051198297
+Number of nodes: 12
+Node Group Name:  pa-sase-data-sink-nodepool
+Instance Type:  e2-custom-16-32768
+Total Memory Capacity:  134668124159.99998
+Memory of Workloads:  45238052776
+Total CPU Capacity 64.0
+CPU of Workloads:  20.5
+Number of nodes: 4
+Node Group Name:  pa-sase-adem-nodepool
+Instance Type:  n2d-standard-16
+Total Memory Capacity:  128000000000
+Memory of Workloads:  3221225472
+Total CPU Capacity 32.0
+CPU of Workloads:  0.5
+Number of nodes: 2
+Node Group Name:  pa-sase-sdwan-nodepool
+Instance Type:  custom-16-32768
+Total Memory Capacity:  101001093119.99998
+Memory of Workloads:  4251532710.888889
+Total CPU Capacity 48.0
+CPU of Workloads:  3.095318103921336
+Number of nodes: 3
+
+Data after manual execution
+Node Group Name:  nodepool-01
+Instance Type:  e2-standard-16
+Total Memory Capacity:  896000000000
+Memory of Workloads:  172173745888.6985
+Total CPU Capacity 224.0
+CPU of Workloads:  78.59881994090473
+Number of nodes: 14
+Node Group Name:  pa-sase-data-sink-nodepool
+Instance Type:  e2-custom-16-32768
+Total Memory Capacity:  101001093119.99998
+Memory of Workloads:  27777040844.52507
+Total CPU Capacity 48.0
+CPU of Workloads:  10.448721316643999
+Number of nodes: 3
+Node Group Name:  pa-sase-adem-nodepool
+Instance Type:  n2d-standard-16
+Total Memory Capacity:  128000000000
+Memory of Workloads:  3489660928
+Total CPU Capacity 32.0
+CPU of Workloads:  0.6
+Number of nodes: 2
+Node Group Name:  pa-sase-sdwan-nodepool
+Instance Type:  custom-16-32768
+Total Memory Capacity:  101001093119.99998
+Memory of Workloads:  3182873742.2222223
+Total CPU Capacity 48.0
+CPU of Workloads:  1.19730849609106
+Number of nodes: 3
+
+Workload Node recommendation
+
+Data before manual execution
+
+Node Group Name:  nodepool-01
+Instance Type:  e2-standard-16
+Total Memory Capacity:  768000000000
+Memory of Workloads:  118226483103.11859
+Total CPU Capacity 192.0
+CPU of Workloads:  64.49395051198297
+Number of nodes: 12
+Node Group Name:  pa-sase-data-sink-nodepool
+Instance Type:  e2-custom-16-32768
+Total Memory Capacity:  134668124159.99998
+Memory of Workloads:  45238052776
+Total CPU Capacity 64.0
+CPU of Workloads:  20.5
+Number of nodes: 4
+Node Group Name:  pa-sase-adem-nodepool
+Instance Type:  n2d-standard-16
+Total Memory Capacity:  128000000000
+Memory of Workloads:  3221225472
+Total CPU Capacity 32.0
+CPU of Workloads:  0.5
+Number of nodes: 2
+Node Group Name:  pa-sase-sdwan-nodepool
+Instance Type:  custom-16-32768
+Total Memory Capacity:  101001093119.99998
+Memory of Workloads:  4251532710.888889
+Total CPU Capacity 48.0
+CPU of Workloads:  3.095318103921336
+Number of nodes: 3
+
+Data after manual execution
+
+Node Group Name:  nodepool-01
+Instance Type:  e2-standard-16
+Total Memory Capacity:  896000000000
+Memory of Workloads:  172173745888.6985
+Total CPU Capacity 224.0
+CPU of Workloads:  78.59881994090473
+Number of nodes: 14
+Node Group Name:  pa-sase-data-sink-nodepool
+Instance Type:  e2-custom-16-32768
+Total Memory Capacity:  101001093119.99998
+Memory of Workloads:  27777040844.52507
+Total CPU Capacity 48.0
+CPU of Workloads:  10.448721316643999
+Number of nodes: 3
+Node Group Name:  pa-sase-adem-nodepool
+Instance Type:  n2d-standard-16
+Total Memory Capacity:  128000000000
+Memory of Workloads:  3489660928
+Total CPU Capacity 32.0
+CPU of Workloads:  0.6
+Number of nodes: 2
+Node Group Name:  pa-sase-sdwan-nodepool
+Instance Type:  custom-16-32768
+Total Memory Capacity:  101001093119.99998
+Memory of Workloads:  3182873742.2222223
+Total CPU Capacity 48.0
+CPU of Workloads:  1.19730849609106
+Number of nodes: 3
