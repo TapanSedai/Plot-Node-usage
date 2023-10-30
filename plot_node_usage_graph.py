@@ -41,18 +41,22 @@ def get_node_group_details(nodes_list, isBefore):
         print("Total CPU Capacity", totalCpuCapacity)
         print("CPU of Workloads: ", cpuOfWorkloads)
         print("Number of nodes:", nodeGroup["numberOfNodes"])
+        print("Number of Apps:", len(appsWithResourceDetails))
 
         if nodeGroupName not in nodeGroupList.keys():
             nodeGroupList[nodeGroupName] = {} 
             nodeGroupList[nodeGroupName]["cpu"] = {}
             nodeGroupList[nodeGroupName]["memory"] = {}
+            nodeGroupList[nodeGroupName]["numberOfApps"] = {}
 
         optimizationTimeConst = "before" if isBefore else "after"
         nodeGroupList[nodeGroupName]["cpu"][optimizationTimeConst] = (cpuOfWorkloads/totalCpuCapacity)*100
         nodeGroupList[nodeGroupName]["memory"][optimizationTimeConst] = (memoryOfWorkloads/totalMemoryCapacity)*100
+        nodeGroupList[nodeGroupName]["numberOfApps"][optimizationTimeConst] = len(appsWithResourceDetails)
 
         print("cpu percentage use", nodeGroupList[nodeGroupName]["cpu"][optimizationTimeConst])
         print("memory percentage use", nodeGroupList[nodeGroupName]["memory"][optimizationTimeConst])
+        print("number of apps", nodeGroupList[nodeGroupName]["numberOfApps"][optimizationTimeConst])
 
 def get_node_only_recommendation():
     print("Node only recommendation")
@@ -71,7 +75,7 @@ def plot_results():
     ax.set_title('Node Group Recommendation')
     ax.set_ylabel('Percentage of Resource Used')
     ax.set_xlabel('Node Group Name')
-    ax.set_ylim([0, 100])
+    #ax.set_ylim([0, 100])
     ax.set_xticks(range(len(nodeGroupList)))
     ax.set_xticklabels(list(nodeGroupList.keys()), rotation=20)
 
@@ -84,8 +88,11 @@ def plot_results():
 
     #ax.bar(pos_before, [nodeGroupList[x]["cpu"]["before"] for x in nodeGroupList.keys()], bar_width, color='b', label='CPU Before')
     #ax.bar(pos_after, [nodeGroupList[x]["cpu"]["after"] for x in nodeGroupList.keys()], bar_width, color='r', label='CPU After')
-    ax.bar(pos_before, [nodeGroupList[x]["memory"]["before"] for x in nodeGroupList.keys()], bar_width, color='g', label='Memory Before')
-    ax.bar(pos_after, [nodeGroupList[x]["memory"]["after"] for x in nodeGroupList.keys()], bar_width, color='y', label='Memory After')
+    #ax.bar(pos_before, [nodeGroupList[x]["memory"]["before"] for x in nodeGroupList.keys()], bar_width, color='g', label='Memory Before')
+    #ax.bar(pos_after, [nodeGroupList[x]["memory"]["after"] for x in nodeGroupList.keys()], bar_width, color='y', label='Memory After')
+
+    ax.bar(pos_before, [nodeGroupList[x]["numberOfApps"]["before"] for x in nodeGroupList.keys()], bar_width, color='b', label='Number of Apps Before')
+    ax.bar(pos_after, [nodeGroupList[x]["numberOfApps"]["after"] for x in nodeGroupList.keys()], bar_width, color='r', label='Number of Apps After')
     ax.legend()
     plt.show()
 
