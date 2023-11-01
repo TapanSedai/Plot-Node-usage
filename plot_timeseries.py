@@ -341,14 +341,17 @@ def node_group_summary(pdf_pages, utilization_map, capacity_map, account, title,
 
     plt.xlabel('Time')
     plt.ylabel(unit)
-    plt.title('Total Apps count across node group')
+    plt.title(title)
     plt.xticks(rotation=20)
     if isMemory:
         plt.gca().yaxis.set_major_formatter(FuncFormatter(gib_format))
+
     plt.subplot(1, 2, 2)  # 2 rows, 1 column, 2nd plot    
     plt.plot(times, apps_count, label='Total Number of Apps')
+    plt.xlabel('Time')
+    plt.ylabel('Total no of apps count')
     plt.xticks(rotation=20)
-    plt.title(title)     
+    plt.title('Total no of apps across node group')     
     plt.tight_layout()
     plt.legend(loc='upper right')  
 
