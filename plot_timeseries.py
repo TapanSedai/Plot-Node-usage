@@ -6,6 +6,12 @@ import json
 from datetime import datetime, timedelta
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.ticker import FuncFormatter
+import matplotlib.dates as mdates
+
+UTILIZATION_GRAPH_COLOR = '#031230'
+CAPACITY_GRAPH_COLOR = '#fa8155'
+APPS_GRAPH_COLOR = '#2d4217'
+OPTIMIZATION_LINE_COLOR = '#d90f23'
 
 def gib_format(y, pos):
     gib = y / (1024 ** 3)  # Convert bytes to GiB
@@ -147,7 +153,20 @@ def plot_utilization_timeseries():
 
 
 def plot_capacity_timeseries(daysForChart=30):
-    df = pd.read_csv('sedai_cluster_optimization_projections.csv')
+    df1 = pd.read_csv('sedai_cluster_optimization_projections.csv')
+    df2 = pd.read_csv('current_nodegroups.csv')
+    # Concatenate vertically (stacking one dataframe on top of the other)
+
+    # Convert 'created_time' column to datetime if it's not already
+    df1['updated_time'] = pd.to_datetime(df1['updated_time'], utc=True)
+    df2['updated_time'] = pd.to_datetime(df2['updated_time'], utc=True)
+
+    filter_date = datetime(2023, 10, 14)
+    filter_date = pd.Timestamp(filter_date, tz='UTC')
+    # Filter dataframes based on date
+    df1_filtered = df1[df1['updated_time'].dt.date <= filter_date.date()]
+    df2_filtered = df2[df2['updated_time'].dt.date > filter_date.date()]
+    df = pd.concat([df1_filtered, df2_filtered], axis=0)
     account_list = df['account_id'].unique()
 
     for account in account_list:
@@ -161,13 +180,17 @@ def plot_capacity_timeseries(daysForChart=30):
         account_df['updated_time'] = pd.to_datetime(account_df['updated_time'])
         
         # Remove records from a specific date (e.g., October 26th, 2023)
-        specific_date = datetime(2023, 10, 26)
-        specific_date = pd.to_datetime(specific_date)
+        specific_date_1 = datetime(2023, 10, 26)
+        specific_date_1 = pd.to_datetime(specific_date_1)
 
-        thirty_days_ago = pd.Timestamp(current_date - pd.Timedelta(days=30), tz='UTC')
+        specific_date_2 = datetime(2023, 10, 27)
+        specific_date_2 = pd.to_datetime(specific_date_2)
+
+        thirty_days_ago = pd.Timestamp(current_date - pd.Timedelta(days=daysForChart), tz='UTC')
         current_date = pd.Timestamp(current_date, tz='UTC')
 
-        account_df = account_df[account_df['updated_time'].dt.date != specific_date.date()]
+        account_df = account_df[account_df['updated_time'].dt.date != specific_date_1.date()]
+        account_df = account_df[account_df['updated_time'].dt.date != specific_date_2.date()]
         account_df = account_df[(account_df['updated_time'] >= thirty_days_ago) & (account_df['updated_time'] <= current_date)]
 
         acc_details = account_df['details']
@@ -186,11 +209,16 @@ def plot_capacity_timeseries(daysForChart=30):
             get_node_group_details(details, cpuMap, memMap, appsMap, cpuCapacityMap, memCapacityMap, time)  
    
         pdf_pages = PdfPages('time_series_plots.pdf')
-        plot_nodegroup_capacity_vs_utilization(pdf_pages, cpuMap, cpuCapacityMap, account, 'CPU Timeseries Data', 'Cores', False, appsMap) 
-        plot_nodegroup_capacity_vs_utilization(pdf_pages, memMap, memCapacityMap, account, 'Memory Timeseries Data', 'GibiBytes', True, appsMap) 
+        #plot_nodegroup_capacity_vs_utilization(pdf_pages, cpuMap, cpuCapacityMap, account, 'CPU Timeseries Data', 'Cores', False, appsMap) 
+        #plot_nodegroup_capacity_vs_utilization(pdf_pages, memMap, memCapacityMap, account, 'Memory Timeseries Data', 'GibiBytes', True, appsMap) 
+        plot_ng_utilization_apps_in_single_graph(pdf_pages, cpuMap, cpuCapacityMap, account, 'CPU Timeseries Data', 'Cores', False, appsMap)
+        plot_ng_utilization_apps_in_single_graph(pdf_pages, memMap, memCapacityMap, account, 'Memory Timeseries Data', 'GibiBytes', True, appsMap)
         #plot_app_graph(pdf_pages, appsMap, account, 'Apps Timeseries Data', 'Number of Apps')
-        node_group_summary(pdf_pages, totalCpuUsageMap, totalCpuCapacityMap, account, 'Node Group CPU Utilization summary', 'Cores', False)
-        node_group_summary(pdf_pages, totalMemoryUsageMap, totalMemoryCapacityMap, account, 'Node Group Memory Utilization summary', 'GibiBytes', True)
+        
+        #node_group_summary(pdf_pages, totalCpuUsageMap, totalCpuCapacityMap, account, 'Node Group CPU Utilization summary', 'Cores', False)
+        #node_group_summary(pdf_pages, totalMemoryUsageMap, totalMemoryCapacityMap, account, 'Node Group Memory Utilization summary', 'GibiBytes', True)
+        summary(pdf_pages, totalCpuUsageMap, totalCpuCapacityMap, account, 'Cluster CPU Utilization summary', 'Cores', False)
+        summary(pdf_pages, totalMemoryUsageMap, totalMemoryCapacityMap, account, 'Cluster Memory Utilization summary', 'GibiBytes', True)
         pdf_pages.close()
 
         break    # we need dev cluster info only for now
@@ -336,7 +364,7 @@ def node_group_summary(pdf_pages, utilization_map, capacity_map, account, title,
     plt.subplot(1, 2, 1)  # 2 rows, 1 column, 1st plot
     plt.stackplot(times, util_values, capacity_values, labels=['Utilization', 'Capacity'])
     # TODO Take the correct date from DB
-    target_date = datetime(2023, 10, 15)
+    target_date = datetime(2023, 10, 13)
     plt.axvline(x=target_date, color='r', linestyle='--', label='Optimization Started Date')
 
     plt.xlabel('Time')
@@ -357,6 +385,52 @@ def node_group_summary(pdf_pages, utilization_map, capacity_map, account, title,
 
     # Add the plot to the PDF
     pdf_pages.savefig()
+
+def summary(pdf_pages, utilization_map, capacity_map, account, title, unit, isMemory=True):
+    util_values = []
+    capacity_values = []
+    apps_count = []
+    times = utilization_map.keys()
+    for time in sorted(times):
+        util_data = utilization_map[time]
+        capacity_data = capacity_map[time]
+        util_values.append(util_data)
+        capacity_values.append(capacity_data)
+        apps_count.append(totalAppsMap[time])
+
+    fig, ax1 = plt.subplots(figsize=(20,10)) 
+
+    colors = [UTILIZATION_GRAPH_COLOR, CAPACITY_GRAPH_COLOR]
+    
+    ax1.stackplot(times, util_values, capacity_values, colors=colors, labels=['Utilization', 'Capacity'])
+    # TODO Take the correct date from DB
+    target_date = datetime(2023, 10, 13)
+    ax1.axvline(x=target_date, color=OPTIMIZATION_LINE_COLOR, linestyle='--', label='Optimization Started Date')
+
+    ax1.set_xlabel('Time')
+    ax1.set_ylabel(unit)
+    if isMemory:
+        ax1.yaxis.set_major_formatter(FuncFormatter(gib_format))
+
+    ax1.set_xticklabels(times, rotation=20)
+
+    # Format x-axis to show only dates
+    ax1.xaxis.set_major_locator(mdates.DayLocator(interval=3))
+    ax1.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))    
+
+    ax2 = ax1.twinx()
+   
+    ax2.plot(times, apps_count, label='Total Number of Apps', color=APPS_GRAPH_COLOR)
+    ax2.set_ylabel('Apps in cluster', color='green')
+
+    plt.title(title)     
+    plt.tight_layout()
+    lines1, labels1 = ax1.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
+
+    # Add the plot to the PDF
+    pdf_pages.savefig()    
 
 
 def plot_nodegroup_capacity_vs_utilization(pdf_pages, utilization_map, capacity_map, account, title, unit, isMemory=True, appsMap=None):
@@ -403,7 +477,63 @@ def plot_nodegroup_capacity_vs_utilization(pdf_pages, utilization_map, capacity_
         pdf_pages.savefig()
 
     #plt.show()    
+
+def plot_ng_utilization_apps_in_single_graph(pdf_pages, utilization_map, capacity_map, account, title, unit, isMemory=True, appsMap=None):
+    plt.figure(figsize=(40, 20))
+    for nodeGroup in utilization_map.keys():
+        
+        util_data = utilization_map[nodeGroup]
+        capacity_data = capacity_map[nodeGroup]
+        apps_data = appsMap[nodeGroup]
+        dates = [date_str.to_pydatetime() for date_str in util_data.keys()]
+        util_values = list(util_data.values())
+        capacity_values = list(capacity_data.values())
+
+        colors = [UTILIZATION_GRAPH_COLOR, CAPACITY_GRAPH_COLOR]
+
+        fig, ax1 = plt.subplots(figsize=(20,10))
+        ax1.stackplot(dates, util_values, capacity_values, colors=colors, labels=['Utilization', 'Capacity'])
+              
+        # TODO Take the correct date from DB
+        target_date = datetime(2023, 10, 13)
+
+        # Add a vertical dotted line at the target date
+        ax1.axvline(x=target_date, color=OPTIMIZATION_LINE_COLOR, linestyle='--', label='Optimization Started Date')
+
+        ax1.set_xlabel('Time')
+        ax1.set_ylabel(unit)
+        #ax1.set_xticks(ticks = target_date, rotation=20)
+        if isMemory:
+            ax1.yaxis.set_major_formatter(FuncFormatter(gib_format))
+        ax1.set_xticklabels(dates, rotation=20)
+
+        # Format x-axis to show only dates
+        ax1.xaxis.set_major_locator(mdates.DayLocator(interval=3))
+        ax1.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+           
+        #ax1.legend(loc='upper right')  
+
+        # Create the second axis (on the right)
+        ax2 = ax1.twinx()
+        ax2.plot(dates, list(apps_data.values()), color=APPS_GRAPH_COLOR, label='Number of Apps') 
+        ax2.set_ylabel('Apps in Nodegroup', color='green')
+
+        if isMemory:
+            plt.title('Memory Utilization for ' + nodeGroup)
+        else:
+            plt.title('CPU Utilization for ' + nodeGroup)
+
+        lines1, labels1 = ax1.get_legend_handles_labels()
+        lines2, labels2 = ax2.get_legend_handles_labels()
+        ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
+
+        plt.tight_layout()
+        # Add the plot to the PDF
+        pdf_pages.savefig()
+
+    #plt.show()    
+    pass    
    
 
 #plot_utilization_timeseries()
-plot_capacity_timeseries()
+plot_capacity_timeseries(45)
